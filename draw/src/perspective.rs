@@ -30,12 +30,13 @@ impl Perspective {
         let f = camera - target;
 
         let horizontal_rotate_mat = Matrix3::from_axis_angle(u, Rad(rad.x));
-        let vertical_rotate_mat = Matrix3::from_axis_angle(s, Rad(rad.y));
-        let camera_pos = vertical_rotate_mat * horizontal_rotate_mat * Vector3::new(f.x, f.y, f.z);
+        let vertical_rotate_mat = Matrix3::from_axis_angle(s, Rad(-rad.y));
+        let rotation_mat = vertical_rotate_mat * horizontal_rotate_mat;
+        let camera_pos = rotation_mat * Vector3::new(f.x, f.y, f.z);
 
-        println!("camera: {}, {}, {}", camera_pos.x, camera_pos.y, camera_pos.z);
+        // println!("camera: {}, {}, {}", camera_pos.x, camera_pos.y, camera_pos.z);
         Perspective {camera: Point3::new(camera_pos.x + target.x, camera_pos.y + target.y, camera_pos.z + target.z),
-             target: target, up: up}
+             target: target, up: rotation_mat * up}
     }
 
     pub fn translocate(

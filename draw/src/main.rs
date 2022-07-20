@@ -106,7 +106,7 @@ fn main() {
 
     for i in 0..4 {        
         let pers = Perspective::rotate(camera, target, up, 
-            Vector2::new(0.0, std::f32::consts::FRAC_PI_4));
+            Vector2::new(0.0, -std::f32::consts::FRAC_PI_4));
         camera = pers.camera;
         target = pers.target;
         up = pers.up;
