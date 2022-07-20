@@ -1,9 +1,11 @@
 mod cg_system;
 mod objects;
+mod perspective;
 
 use cg_system::CGExecutor;
 use std::f32::consts::PI;
 use objects::{Object, Sphere, Cube, Tetrahedron, Cylinder, Circle, Triangle, Square};
+use perspective::Perspective;
 
 type Vector3 = cgmath::Vector3<f32>;
 type Vector4 = cgmath::Vector4<f32>;
@@ -79,10 +81,12 @@ fn main() {
     let light_diffuse = Vector3::new(0.5, 0.5, 0.5);
     let light_specular = Vector3::new(0.2, 0.2, 0.2);
 
+    println!("camera: {}, {}, {}", camera_x, camera_y, camera_z);
+
     let mut executor = CGExecutor::new(
         window_width,
         window_height,
-        vertex_array,
+        vertex_array.clone(),
         camera_x,
         camera_y,
         camera_z,
@@ -96,4 +100,32 @@ fn main() {
     );
     executor.execute();
 
+    let mut camera = Point3::new(camera_x, camera_y, camera_z);
+    let mut target = Point3::new(0.0, 0.0, 0.0);
+    let mut up = Vector3::new(0.0, 0.0, 1.0);
+
+    for i in 0..4 {        
+        let pers = Perspective::rotate(camera, target, up, 
+            Vector2::new(0.0, std::f32::consts::FRAC_PI_4));
+        camera = pers.camera;
+        target = pers.target;
+        up = pers.up;
+        let view_matrix = Matrix4::look_at(camera, target, up);
+        let mut executor = CGExecutor::new(
+            window_width,
+            window_height,
+            vertex_array.clone(),
+            camera.x,
+            camera.y,
+            camera.z,
+            view_matrix,
+            material_specular,
+            material_shininess,
+            light_direction,
+            light_ambient,
+            light_diffuse,
+            light_specular
+        );
+        executor.execute();
+    }
 }

@@ -11,6 +11,14 @@ pub struct RootTimeline {
     pub tl_3d: Timeline3D,
 }
 
+impl RootTimeline {
+    pub fn gen(self, frame_no: i32){
+
+    }
+}
+
+
+
 pub struct Timeline2D {
     width: i32,
     height: i32,

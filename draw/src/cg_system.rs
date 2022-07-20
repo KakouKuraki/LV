@@ -96,7 +96,7 @@ impl CGExecutor {
         }
 
         let window = video_subsystem
-            .window("SDL", self.window_width, self.window_height)
+            .window("SDL2", self.window_width, self.window_height)
             .opengl()
             .position_centered()
             .build()
