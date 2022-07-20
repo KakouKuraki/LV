@@ -10,6 +10,8 @@ use imgui::im_str;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 
+use sdl2::image;
+
 mod frame_buffer;
 mod image_manager;
 mod shader;
