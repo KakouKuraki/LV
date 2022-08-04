@@ -66,14 +66,11 @@ fn main() {
         test_object.rotate_z(PI/4.0*(object_index) as f32, object_center.x, object_center.y);
         vertex_array.push(test_object.encode());
     }
-    let camera_x = 20.0 as f32;
-    let camera_y = -20.0 as f32;
-    let camera_z = 20.0 as f32;
-    let view_matrix = Matrix4::look_at(
-        Point3::new(camera_x, camera_y, camera_z),
-        Point3::new(0.0, 0.0, 0.0),
-        Vector3::new(0.0, 0.0, 1.0),
-    );
+
+    let camera = Point3::new(20.0, -20.0, 20.0);
+    let camera_target = Point3::new(0.0, 0.0, 0.0);
+    let camera_up = Vector3::new(0.0, 0.0, 1.0);
+
     let material_specular = Vector3::new(0.2, 0.2, 0.2);
     let material_shininess = 0.1 as f32;
     let light_direction = Vector3::new(1.0, 1.0, 0.0);
@@ -81,16 +78,13 @@ fn main() {
     let light_diffuse = Vector3::new(0.5, 0.5, 0.5);
     let light_specular = Vector3::new(0.2, 0.2, 0.2);
 
-    println!("camera: {}, {}, {}", camera_x, camera_y, camera_z);
-
     let mut executor = CGExecutor::new(
         window_width,
         window_height,
         vertex_array.clone(),
-        camera_x,
-        camera_y,
-        camera_z,
-        view_matrix,
+        camera,
+        camera_target,
+        camera_up,
         material_specular,
         material_shininess,
         light_direction,
@@ -99,33 +93,4 @@ fn main() {
         light_specular
     );
     executor.execute();
-
-    let mut camera = Point3::new(camera_x, camera_y, camera_z);
-    let mut target = Point3::new(0.0, 0.0, 0.0);
-    let mut up = Vector3::new(0.0, 0.0, 1.0);
-
-    for i in 0..4 {        
-        let pers = Perspective::rotate(camera, target, up, 
-            Vector2::new(0.0, std::f32::consts::FRAC_PI_4));
-        camera = pers.camera;
-        target = pers.target;
-        up = pers.up;
-        let view_matrix = Matrix4::look_at(camera, target, up);
-        let mut executor = CGExecutor::new(
-            window_width,
-            window_height,
-            vertex_array.clone(),
-            camera.x,
-            camera.y,
-            camera.z,
-            view_matrix,
-            material_specular,
-            material_shininess,
-            light_direction,
-            light_ambient,
-            light_diffuse,
-            light_specular
-        );
-        executor.execute();
-    }
 }

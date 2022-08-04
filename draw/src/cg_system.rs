@@ -9,13 +9,16 @@ use gl::types::{GLfloat, GLsizei, GLsizeiptr};
 use imgui::im_str;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-
+use sdl2::mouse::{MouseState, MouseButton};
 use sdl2::image;
+
 
 mod frame_buffer;
 mod image_manager;
 mod shader;
 mod vertex;
+
+use super::perspective::Perspective;
 
 use frame_buffer::FrameBuffer;
 use shader::Shader;
@@ -24,6 +27,7 @@ use vertex::Vertex;
 #[allow(dead_code)]
 type Point3 = cgmath::Point3<f32>;
 #[allow(dead_code)]
+type Vector2 = cgmath::Vector2<f32>;
 type Vector3 = cgmath::Vector3<f32>;
 #[allow(dead_code)]
 type Matrix4 = cgmath::Matrix4<f32>;
@@ -32,10 +36,9 @@ pub struct CGExecutor {
     window_width: u32,
     window_height: u32,
     vertex_array: Vec<Vec<f32>>, // Vec<[[3, 3, 4, 2]; N]>
-    camera_x: f32,
-    camera_y: f32,
-    camera_z: f32,
-    view_matrix: Matrix4, // Matrix4::look_at(eye: Point3, center: Point3, up: Vector3)
+    camera: Point3,
+    camera_target: Point3,
+    camera_up: Vector3,
     material_specular: Vector3,
     material_shininess: f32,
     light_direction: Vector3,
@@ -56,10 +59,9 @@ impl CGExecutor {
         window_width: u32,
         window_height: u32,
         vertex_array: Vec<Vec<f32>>,
-        camera_x: f32,
-        camera_y: f32,
-        camera_z: f32,
-        view_matrix: Matrix4,
+        camera: Point3,
+        camera_target: Point3,
+        camera_up: Vector3,
         material_specular: Vector3,
         material_shininess: f32,
         light_direction: Vector3,
@@ -72,10 +74,9 @@ impl CGExecutor {
             window_width,
             window_height,
             vertex_array,
-            camera_x,
-            camera_y,
-            camera_z,
-            view_matrix,
+            camera,
+            camera_target,
+            camera_up,
             material_specular,
             material_shininess,
             light_direction,
@@ -162,7 +163,13 @@ impl CGExecutor {
 
         let mut debug_window_mode = true;
 
+        let mut is_mouse_pushed = false;
+        let mut clicked_button = MouseButton::Unknown;
+        let mut clicked_pos: [i32; 2] = [0, 0];
+
+
         let mut event_pump = sdl_context.event_pump().unwrap();
+
         'running: loop {
             for event in event_pump.poll_iter() {
                 imgui_sdl2_context.handle_event(&mut imgui_context, &event);
@@ -183,6 +190,28 @@ impl CGExecutor {
                     } => {
                         debug_window_mode = !debug_window_mode;
                         println!("debug mode: {}", debug_window_mode);
+                    }
+                    Event::MouseButtonDown {
+                        mouse_btn,
+                        x,
+                        y,
+                        ..
+                    } => {
+                        is_mouse_pushed = true;
+                        clicked_button = mouse_btn;
+                        clicked_pos[0] = x;
+                        clicked_pos[1] = y;
+                    }
+                    Event::MouseButtonUp{
+                        ..
+                    } => {
+                        is_mouse_pushed = false;
+                    }
+                    Event::MouseWheel{
+                        direction,
+                        ..
+                    } => {
+
                     }
                     _ => {}
                 }
@@ -231,12 +260,47 @@ impl CGExecutor {
                     100.0,
                 );
 
+                imgui_sdl2_context.prepare_frame(
+                    imgui_context.io_mut(),
+                    &window,
+                    &event_pump.mouse_state(),
+                );
+                let ui = imgui_context.frame();
+
+
+                let mouse_pos = ui.io().mouse_pos;
+                let mouse_displacement: [f32; 2] = [mouse_pos[0] as f32 - clicked_pos[0] as f32, mouse_pos[1] as f32 - clicked_pos[1] as f32];
+                
+                let view_matrix = match clicked_button{
+                    MouseButton::Left => {
+                        let v = Perspective::rotate(self.camera, self.camera_target, self.camera_up, 
+                            Vector2::new(mouse_displacement[0] / 100.0, mouse_displacement[1] / 100.0));
+                        if !is_mouse_pushed {
+                            self.camera = v.camera; self.camera_target = v.target; self.camera_up = v.up;
+                            clicked_button = MouseButton::Unknown;
+                        }
+                        Matrix4::look_at(v.camera, v.target, v.up)
+                    },
+                    MouseButton::Middle => {
+                        let v = Perspective::translocate(self.camera, self.camera_target, self.camera_up,
+                            Vector2::new(mouse_displacement[0] / 30.0, mouse_displacement[1] / 30.0));
+                        if !is_mouse_pushed {
+                            self.camera = v.camera; self.camera_target = v.target; self.camera_up = v.up;
+                            clicked_button = MouseButton::Unknown;
+                        }
+                        Matrix4::look_at(v.camera, v.target, v.up)
+                    },
+                    _ => {
+                        Matrix4::look_at(self.camera, self.camera_target, self.camera_up)
+                    }
+                };
+
                 // shader use matrices
                 shader.use_program();
                 shader.set_mat4(c_str!("uModel"), &model_matrix);
-                shader.set_mat4(c_str!("uView"), &self.view_matrix);
+                shader.set_mat4(c_str!("uView"), &view_matrix);
                 shader.set_mat4(c_str!("uProjection"), &projection_matrix);
-                shader.set_vec3(c_str!("uViewPosition"), self.camera_x, self.camera_y, self.camera_z);
+                shader.set_vec3(c_str!("uViewPosition"), self.camera.x, self.camera.y, self.camera.z);
                 shader.set_vector3(c_str!("uMaterial.specular"), &self.material_specular);
                 shader.set_float(c_str!("uMaterial.shininess"), self.material_shininess);
                 shader.set_vector3(c_str!("uLight.direction"), &self.light_direction);
@@ -289,13 +353,8 @@ impl CGExecutor {
                 screen_vertex.draw();
                 gl::BindTexture(gl::TEXTURE_2D, 0);
 
-                imgui_sdl2_context.prepare_frame(
-                    imgui_context.io_mut(),
-                    &window,
-                    &event_pump.mouse_state(),
-                );
 
-                let ui = imgui_context.frame();
+                
                 imgui::Window::new(im_str!("Information"))
                     .size([300.0, 450.0], imgui::Condition::FirstUseEver)
                     .position([10.0, 10.0], imgui::Condition::FirstUseEver)

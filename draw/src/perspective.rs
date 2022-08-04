@@ -29,7 +29,7 @@ impl Perspective {
         let u = view_matrix.row(1).truncate().normalize();
         let f = camera - target;
 
-        let horizontal_rotate_mat = Matrix3::from_axis_angle(u, Rad(rad.x));
+        let horizontal_rotate_mat = Matrix3::from_axis_angle(u, Rad(-rad.x));
         let vertical_rotate_mat = Matrix3::from_axis_angle(s, Rad(-rad.y));
         let rotation_mat = vertical_rotate_mat * horizontal_rotate_mat;
         let camera_pos = rotation_mat * Vector3::new(f.x, f.y, f.z);
