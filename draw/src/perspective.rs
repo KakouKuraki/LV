@@ -54,4 +54,16 @@ impl Perspective {
         
         Perspective {camera: next_camera_pos, target: target + transition , up: up}
     }
+
+    pub fn translocate_forward(       
+        camera: Point3,
+        target: Point3,
+        up: Vector3,
+        mouse_move: f32,
+    )-> Perspective
+    {
+        let forward = Vector3::new(target.x - camera.x, target.y - camera.y, target.z - camera.z).normalize() * mouse_move;
+
+        Perspective {camera: camera + forward, target: target + forward, up: up}
+    }
 }

@@ -9,7 +9,7 @@ use gl::types::{GLfloat, GLsizei, GLsizeiptr};
 use imgui::im_str;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::mouse::{MouseState, MouseButton};
+use sdl2::mouse::{MouseState, MouseButton, MouseWheelDirection};
 use sdl2::image;
 
 
@@ -167,6 +167,8 @@ impl CGExecutor {
         let mut clicked_button = MouseButton::Unknown;
         let mut clicked_pos: [i32; 2] = [0, 0];
 
+        let mut is_mouse_wheel_rolling = false;
+        let mut mouse_wheel = MouseWheelDirection::Normal;
 
         let mut event_pump = sdl_context.event_pump().unwrap();
 
@@ -210,9 +212,7 @@ impl CGExecutor {
                     Event::MouseWheel{
                         direction,
                         ..
-                    } => {
-
-                    }
+                    } => {}
                     _ => {}
                 }
             }
@@ -290,6 +290,18 @@ impl CGExecutor {
                         }
                         Matrix4::look_at(v.camera, v.target, v.up)
                     },
+                    MouseButton::Unknown => {
+                        let wheel = ui.io().mouse_wheel;
+                        if wheel != 0.0 {
+                            let v = Perspective::translocate_forward(self.camera, self.camera_target, self.camera_up, wheel * 5.0);
+                            self.camera = v.camera; self.camera_target = v.target; self.camera_up = v.up;
+                            Matrix4::look_at(v.camera, v.target, v.up)
+                        }
+                        else {
+                            Matrix4::look_at(self.camera, self.camera_target, self.camera_up)
+                        }
+                    },
+
                     _ => {
                         Matrix4::look_at(self.camera, self.camera_target, self.camera_up)
                     }
