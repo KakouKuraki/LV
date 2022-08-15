@@ -185,14 +185,16 @@ impl CGExecutor {
             encode_context.set_bit_rate(400000);
             encode_context.set_width(self.window_width as i32);
             encode_context.set_height(self.window_height as i32);
-            encode_context.set_time_base(ra(1, 60));
-            encode_context.set_framerate(ra(60, 1));
+            encode_context.set_time_base(ra(1, 30));
+            encode_context.set_framerate(ra(30, 1));
             encode_context.set_gop_size(10);
             encode_context.set_max_b_frames(1);
             encode_context.set_pix_fmt(rsmpeg::ffi::AVPixelFormat_AV_PIX_FMT_RGB24);
             encode_context.open(None)?;
             encode_context
         };
+
+        
 
         // Create a reusable frame buffer holder.
         let mut frame = AVFrame::new();
@@ -201,6 +203,7 @@ impl CGExecutor {
         frame.set_height(encode_context.height);
         frame.alloc_buffer()?;
 
+        
         let mut output_format_context = {
             let output_video_path = cstr!("././output/test.mp4");
             let mut output_format_context = AVFormatContextOutput::create(output_video_path, None)?;
@@ -375,7 +378,7 @@ impl CGExecutor {
 
                 // shader use matrices
                 shader.use_program();
-                shader.set_float(c_str!("iTime"), frame_no as f32 / 45.);
+                // shader.set_float(c_str!("iTime"), frame_no as f32 / 45.);
                 shader.set_mat4(c_str!("uModel"), &model_matrix);
                 shader.set_mat4(c_str!("uView"), &view_matrix);
                 shader.set_mat4(c_str!("uProjection"), &projection_matrix);
