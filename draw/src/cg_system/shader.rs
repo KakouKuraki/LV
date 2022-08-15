@@ -93,6 +93,10 @@ impl Shader {
         gl::Uniform1f(gl::GetUniformLocation(self.id, name.as_ptr()), value);
     }
 
+    pub unsafe fn set_2int(&self, name: &CStr, value1: i32, value2: i32) {
+        gl::Uniform2i(gl::GetUniformLocation(self.id, name.as_ptr()), value1, value2);
+    }
+
     pub unsafe fn set_vector3(&self, name: &CStr, value: &Vector3) {
         gl::Uniform3fv(
             gl::GetUniformLocation(self.id, name.as_ptr()),

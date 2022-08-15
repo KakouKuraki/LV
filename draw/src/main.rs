@@ -7,13 +7,19 @@ use std::f32::consts::PI;
 use objects::{Object, Sphere, Cube, Tetrahedron, Cylinder, Circle, Triangle, Square};
 use perspective::Perspective;
 
+use std::ffi::{CStr, CString};
+use std::error::Error;
+use rsmpeg::avformat::AVFormatContextInput;
+
 type Vector3 = cgmath::Vector3<f32>;
 type Vector4 = cgmath::Vector4<f32>;
 type Vector2 = cgmath::Vector2<f32>;
 type Point3 = cgmath::Point3<f32>;
 type Matrix4 = cgmath::Matrix4<f32>;
 
+
 fn main() {
+
     let window_width: u32 = 1920;
     let window_height: u32 = 1080;
     let mut vertex_array = vec![];
