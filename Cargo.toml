@@ -3,4 +3,5 @@
 members = [
     "Land_of_Voices",
     "ffmpeg_wrapper",
+    "draw",
 ]
