@@ -194,6 +194,8 @@ impl CGExecutor {
             encode_context
         };
 
+        
+
         // Create a reusable frame buffer holder.
         let mut frame = AVFrame::new();
         frame.set_format(encode_context.pix_fmt);
@@ -201,6 +203,7 @@ impl CGExecutor {
         frame.set_height(encode_context.height);
         frame.alloc_buffer()?;
 
+        
         let mut output_format_context = {
             let output_video_path = cstr!("././output/test.mp4");
             let mut output_format_context = AVFormatContextOutput::create(output_video_path, None)?;
