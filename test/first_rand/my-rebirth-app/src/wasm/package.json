@@ -1,0 +1,15 @@
+{
+  "name": "rng_core",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "rng_core_bg.wasm",
+    "rng_core.js",
+    "rng_core.d.ts"
+  ],
+  "main": "rng_core.js",
+  "types": "rng_core.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
